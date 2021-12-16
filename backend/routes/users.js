@@ -40,11 +40,12 @@ router.get('/profile', (req, res) => {
 router.get('/checkAuthentication', (req, res) => {
   const authenticated = typeof req.user !== 'undefined';
   if (!req.isAuthenticated()) {
+    // if user not authenticated send it to client
     console.log(`not Logged in : ${authenticated}`);
     res.status(200).json({ message: 'not logged in', authenticated });
   } else {
     const user = { name: req.user.name, id: req.user.id };
-    res.status(200).json({ user, authenticated });
+    res.status(200).json({ user, authenticated }); // if user  authenticated send it to client with user object
   }
 });
 

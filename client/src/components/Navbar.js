@@ -1,28 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
 const Navbar = () => {
-  const [userName, setUserName] = useState('');
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data } = await axios.get(
-          'http://localhost:4001/user/checkAuthentication',
-          { withCredentials: true }
-        );
-
-        if (data.authenticated) {
-          setUserName(data.user.name);
-        } else {
-          setUserName('');
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    console.log();
-
-    checkAuth();
-  });
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
       <div className="container">
@@ -47,14 +24,6 @@ const Navbar = () => {
                 Home
               </a>
             </li>
-
-            {userName.length !== 0 ? (
-              <li className="nav-item">
-                <button className="btn btn-secondary " aria-current="page">
-                  Welcome {userName}!
-                </button>
-              </li>
-            ) : null}
           </ul>
         </div>
       </div>

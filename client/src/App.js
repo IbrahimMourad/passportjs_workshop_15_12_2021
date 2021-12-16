@@ -35,9 +35,11 @@ function App() {
         { withCredentials: true }
       );
       setIsLoggedIn(data.authenticated);
-      setUserData(data.user);
-      cookie.set('name', data.user.name);
-      cookie.set('id', data.user.id);
+      if (data.authenticated) {
+        setUserData(data.user);
+        cookie.set('name', data.user.name);
+        cookie.set('id', data.user.id);
+      }
     } catch (err) {
       setIsLoggedIn(false);
     }
@@ -57,14 +59,15 @@ function App() {
       try {
         const { data } = await axios.get(
           'http://localhost:4001/user/checkAuthentication',
-          { withCredentials: true }
+          { withCredentials: true } // important to get user from backend
         );
 
-        setIsLoggedIn(data.authenticated);
+        setIsLoggedIn(data.authenticated); // save auth status to local state
         if (isLoggedIn) {
+          // if user authenticated ----> set cookie with user name and id
           cookie.set('name', data.user.name);
           cookie.set('id', data.user.id);
-          setUserData(data.user);
+          setUserData(data.user); //set user data in state
         }
       } catch (err) {
         console.log(err);
