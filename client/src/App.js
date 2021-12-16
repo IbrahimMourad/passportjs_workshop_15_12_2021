@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import axios from 'axios';
+import cookie from 'cookiejs';
+import './styles.css';
 function App() {
   const [formData, setFormData] = useState({
     name: '',
@@ -11,29 +13,84 @@ function App() {
     email: '',
     password: '',
   });
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userData, setUserData] = useState({});
+
   const handleRegister = async () => {
     const { data } = await axios.post(
       'http://localhost:4001/user/register',
-      formData
+      formData,
+      { withCredentials: true }
     );
+    setIsLoggedIn(data.authenticated);
     console.log('register Done', data);
   };
+
   const handleLogin = async () => {
-    const response = await axios.post(
-      'http://localhost:4001/user/login',
-      loginData
-    );
-    console.log(response);
+    try {
+      const { data } = await axios.post(
+        'http://localhost:4001/user/login',
+        loginData,
+        { withCredentials: true }
+      );
+      setIsLoggedIn(data.authenticated);
+      setUserData(data.user);
+      cookie.set('name', data.user.name);
+      cookie.set('id', data.user.id);
+    } catch (err) {
+      setIsLoggedIn(false);
+    }
   };
+
+  const handleLogout = async () => {
+    const { data } = await axios.get('http://localhost:4001/user/logout', {
+      withCredentials: true,
+    });
+    setIsLoggedIn(data.authenticated);
+    cookie.remove('name', 'id');
+    setUserData('');
+  };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await axios.get(
+          'http://localhost:4001/user/checkAuthentication',
+          { withCredentials: true }
+        );
+
+        setIsLoggedIn(data.authenticated);
+        if (isLoggedIn) {
+          cookie.set('name', data.user.name);
+          cookie.set('id', data.user.id);
+          setUserData(data.user);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    checkAuth();
+  }, [isLoggedIn]);
   return (
     <>
       <Navbar />
       <div className="container">
+        <div className="text-center">
+          {isLoggedIn ? (
+            <h2>
+              {' '}
+              Welcome <strong>{userData?.name}</strong>
+            </h2>
+          ) : (
+            <h2>Please Login</h2>
+          )}
+        </div>
         <div className="row">
           <div className="col-md-6">
             <form onSubmit={(e) => e.preventDefault()}>
               <input
-                class="form-control form-control-lg"
+                className="form-control form-control-lg"
                 type="text"
                 placeholder="email"
                 aria-label=".form-control-lg example"
@@ -43,7 +100,7 @@ function App() {
                 }
               />
               <input
-                class="form-control form-control-lg"
+                className="form-control form-control-lg"
                 type="password"
                 placeholder="password"
                 aria-label=".form-control-lg example"
@@ -52,13 +109,27 @@ function App() {
                   setLoginData({ ...loginData, password: e.target.value })
                 }
               />
-              <input type="submit" value="Register" onClick={handleLogin} />
+              {!isLoggedIn ? (
+                <input
+                  type="submit"
+                  className="btn btn-primary"
+                  value="Login"
+                  onClick={handleLogin}
+                />
+              ) : (
+                <input
+                  type="submit"
+                  className="btn btn-danger"
+                  value="Logout"
+                  onClick={handleLogout}
+                />
+              )}
             </form>
           </div>
           <div className="col-md-6">
             <form onSubmit={(e) => e.preventDefault()}>
               <input
-                class="form-control form-control-lg"
+                className="form-control form-control-lg"
                 type="text"
                 placeholder="name"
                 aria-label=".form-control-lg example"
@@ -68,7 +139,7 @@ function App() {
                 }
               />
               <input
-                class="form-control form-control-lg"
+                className="form-control form-control-lg"
                 type="text"
                 placeholder="email"
                 aria-label=".form-control-lg example"
@@ -78,7 +149,7 @@ function App() {
                 }
               />
               <input
-                class="form-control form-control-lg"
+                className="form-control form-control-lg"
                 type="password"
                 placeholder="password"
                 aria-label=".form-control-lg example"
@@ -87,7 +158,12 @@ function App() {
                   setFormData({ ...formData, password: e.target.value })
                 }
               />
-              <input type="submit" value="Register" onClick={handleRegister} />
+              <input
+                type="submit"
+                className="btn btn-dark"
+                value="Register "
+                onClick={handleRegister}
+              />
             </form>
           </div>
         </div>

@@ -5,7 +5,6 @@ const passport = require('passport');
 
 const router = express.Router();
 
-router.get('/test', (req, res) => res.send('test worked'));
 router.post('/register', async (req, res) => {
   const body = req.body;
   const newUser = new User({ ...body });
@@ -20,31 +19,40 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', function (err, user, info) {
-    if (err) {
-      return next(err);
-    }
-    if (!user) {
-      return res.redirect('/login');
-    }
+    if (err) return next(err);
+
+    if (!user) return res.redirect('/login');
+
     req.logIn(user, function (err) {
       if (err) {
         return next(err);
       }
-      console.log(req.user);
-      return res.send(user.username);
+      // console.log(req.user);
+      return res.json({ userID: user.id, authenticated: true });
     });
   })(req, res, next);
 });
+
 router.get('/profile', (req, res) => {
-  res.send({ user: req.user });
+  res.send({ user: req.user ? req.user : 'no user' });
 });
 
-const ensureAuth = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    next();
+router.get('/checkAuthentication', (req, res) => {
+  const authenticated = typeof req.user !== 'undefined';
+  if (!req.isAuthenticated()) {
+    console.log(`not Logged in : ${authenticated}`);
+    res.status(200).json({ message: 'not logged in', authenticated });
   } else {
-    res.redirect('/user/login');
+    const user = { name: req.user.name, id: req.user.id };
+    res.status(200).json({ user, authenticated });
   }
-};
+});
 
+router.get('/logout', (req, res) => {
+  console.log('before', req.user);
+
+  req.logout();
+  console.log('logged out', req.user);
+  res.status(200).json({ message: 'logged out', authenticated: false });
+});
 module.exports = router;

@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const userRouter = require('./routes/users');
 const app = express();
@@ -16,8 +17,25 @@ mongoose.connect(
   { useNewUrlParser: true, useUnifiedTopology: true },
   () => console.log('Connected to db')
 );
-app.use(cors());
-app.use(session({ secret: 'secret' }));
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // <-- location of the react app were connecting to
+    credentials: true,
+  })
+);
+app.use(
+  session({
+    secret: 'secretcode',
+    resave: true,
+    saveUninitialized: true,
+    rolling: true, // <-- Set `rolling` to `true`
+    cookie: {
+      maxAge: 1 * 60 * 60 * 1000,
+    },
+  })
+);
+
+app.use(cookieParser('secretcode'));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
